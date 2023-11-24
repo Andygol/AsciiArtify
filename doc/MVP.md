@@ -64,6 +64,64 @@ spec:
 
 Натисніть <kbd>🔄 SYNC</kbd> та дочекайтесь повного розгортання та синхронізації коду застосунку. Його стан має бути 💚 Health ✅ Synced – тепер він готовий до використання.
 
+### Розгортання застосунку за допомогою ArgoCD CLI
+
+Виконайте вхід до облікового запису в ArgoCD
+
+```sh
+➜ argocd login 127.0.0.1:8080 --username admin --password K98Pf1LmH2nKpvh6
+
+WARNING: server certificate had error: tls: failed to verify certificate: x509: certificate signed by unknown authority. Proceed insecurely (y/n)? y
+
+'admin:login' logged in successfully
+Context '127.0.0.1:8080' updated
+```
+
+Створіть застосунок наступною командою
+
+```sh
+➜ argocd app create demo \
+--repo https://github.com/den-vasyliev/go-demo-app.git --path helm \
+--dest-server https://kubernetes.default.svc --dest-namespace default \
+--grpc-web
+
+application 'demo' created
+```
+
+Перевірте стан та наявність розгортання застосунку
+
+```sh
+➜ argocd app get demo
+Name:               argocd/demo
+Project:            default
+Server:             https://kubernetes.default.svc
+Namespace:          default
+URL:                https://127.0.0.1:8080/applications/demo
+Repo:               https://github.com/den-vasyliev/go-demo-app.git
+Target:             
+Path:               helm
+SyncWindow:         Sync Allowed
+Sync Policy:        <none>
+Sync Status:        OutOfSync from  (e1e880e)
+Health Status:      Missing
+```
+
+Виконайте початкову синхронізацію
+
+```sh
+➜ argocd app sync demo 
+```
+
+![argocd-cli](../assets/argocd-cli.png)
+
+Перевірте стан застосунку, щоб він був готовий до роботи
+
+```sh
+➜ argocd app list demo
+NAME         CLUSTER                         NAMESPACE  PROJECT  STATUS  HEALTH   SYNCPOLICY  CONDITIONS  REPO                                             PATH  TARGET
+argocd/demo  https://kubernetes.default.svc  default    default  Synced  Healthy  <none>      <none>      https://github.com/den-vasyliev/go-demo-app.git  helm  
+```
+
 ## Використання
 
 [![asciicast](https://asciinema.org/a/XZS3zzz099KZoyu3fwRg1fejU.svg)](https://asciinema.org/a/XZS3zzz099KZoyu3fwRg1fejU)
@@ -78,7 +136,7 @@ Forwarding from [::1]:8088 -> 80
 [1]  + 21426 suspended  kubectl port-forward -n demo svc/ambassador 8088:80
 ```
 
-Переведіть його у фоновий режи 
+Переведіть його у фоновий режим
 
 ```sh
 ✦ bg %kubectl
@@ -88,7 +146,7 @@ Forwarding from [::1]:8088 -> 80
 Перевірте, що є доступ до застосунку
 
 ```sh
-✦ curl localhost:8088                                                  
+✦ curl localhost:8088
 Handling connection for 8088
 k8sdiy-api:599e1af
 ```
